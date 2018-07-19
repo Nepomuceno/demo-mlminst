@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sample</title>
+    <style>
+        .drawningBoard {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            width: 250px;
+            margin-top: -9em;
+            /*set to a negative number 1/2 of your height*/
+            margin-left: -15em;
+            /*set to a negative number 1/2 of your width*/
+            border: 1px solid #ccc;
+            background-color: #f3f3f3;
+        }
+
+        .canvas {
+            background: #FFF;
+            margin: 13px;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+        }
+
+        li span {
+            float: left;
+            text-align: center;
+            padding: 10px;
+            margin: 10px;
+            display: flex;
+            border: 1px solid #000;
+            transition: box-shadow 0.5s ease;
+        }
+
+        li span:hover {
+            -webkit-box-shadow: 0px 0px 7px rgba(255, 255, 255, 0.9);
+            box-shadow: 0px 0px 7px rgba(255, 255, 255, 0.9);
+        }
+
+        .digit {
+            font-size: 1.5em;
+        }
+        p#digit {
+            font-weight: bolder;
+            font-size: 2em;
+            display: flex;
+            text-align: center;
+            margin: auto;
+            width: 2em;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="c"></canvas>
+    <div class="drawningBoard">
+        <canvas id="draw" class="canvas" width="224px" height="224px"></canvas>
+
+        <p id="digit">
+
+        </p>
+        <ul id="digits" class="digits">
+            <li>
+                <span class="digit">0</span>
+            </li>
+            <li>
+                <span class="digit">1</span>
+            </li>
+            <li>
+                <span class="digit">2</span>
+            </li>
+            <li>
+                <span class="digit">3</span>
+            </li>
+            <li>
+                <span class="digit">4</span>
+            </li>
+            <li>
+                <span class="digit">5</span>
+            </li>
+            <li>
+                <span class="digit">6</span>
+            </li>
+            <li>
+                <span class="digit">7</span>
+            </li>
+            <li>
+                <span class="digit">8</span>
+            </li>
+            <li>
+                <span class="digit">9</span>
+            </li>
+        </ul>
+        <button id="reset">
+            Reset
+        </button>
+
+
+    </div>
+    <div class="drawningBoard" style="display: none; top: 20%;">
+        <canvas id="destination" class="canvas" width="28px" height="28px"></canvas>
+    </div>
+</body>
+<script>
+    var dimension = [document.documentElement.clientWidth, document.documentElement.clientHeight];
+    var c = document.getElementById("c");
+    c.width = dimension[0];
+    c.height = dimension[1];
+    var exports = {};
+</script>
+<script src="./bundle.js"></script>
+
+</html>
