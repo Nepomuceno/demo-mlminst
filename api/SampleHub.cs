@@ -19,7 +19,9 @@ public class SampleHub : Hub
         var digit = MinstDigit.FromList(image, false);
         var prediction = ml.Predict(digit);
         prediction.Label = prediction.Score.Select((value, index) => new { Value = value, Index = index }).Aggregate((a, b) => (a.Value > b.Value) ? a : b).Index;
-        await Clients.Caller.SendAsync("receivePrediction", digit, prediction);
+        await Clients.Caller.SendAsync("receivePrediction", image, prediction);
+        await Clients.All.SendAsync("receiveBackground", image, prediction);
+
     }
     public async Task SendMessage(string user, string message)
     {

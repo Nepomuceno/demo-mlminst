@@ -25,7 +25,9 @@ namespace api
             var model = new MLModel();
             services.AddSingleton<MLModel>(model);
 
-            services.AddCors(options => options.AddPolicy("CorsPolicy",
+            services.AddCors(options => 
+            
+            options.AddPolicy("CorsPolicy",
             builder =>
             {
                 builder.AllowAnyMethod()

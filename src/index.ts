@@ -2,10 +2,14 @@ import { HubConnectionBuilder, LogLevel } from "@aspnet/signalr";
 
 var hub = new HubConnectionBuilder()
   .withUrl("https://localhost:5001/hub")
+  //.withUrl("https://aidrawn.azurewebsites.net/hub")
   .configureLogging(LogLevel.Information)
   .build();
 
-var counter = 0;
+var counterHorizontal = 0;
+var counterVertical = 0;
+var backgroundScale = 5;
+var maxHorizontal = 1;
 
 var flag = false,
   prevX = 0,
@@ -14,24 +18,36 @@ var flag = false,
   currY = 0,
   dot_flag = false;
 
-async function backgroundDrawning(content: Array<number>,guess?: number, probability?: number): Promise<any> {
+async function backgroundDrawning(content: Array<number>, guess: number, probability?: number): Promise<any> {
   let c = <HTMLCanvasElement>document.getElementById("c");
   var ctx = <CanvasRenderingContext2D>c.getContext("2d");
-  var imageData = ctx.getImageData(0,0,28,28);
+  maxHorizontal = Math.floor(c.width/(28*backgroundScale));
+  var imageData = ctx.getImageData(0, 0, 28, 28);
   var buffer = new ArrayBuffer(content.length * 4);
   var buf8 = new Uint8ClampedArray(buffer);
   var data = new Uint32Array(buffer);
+  var redValue = probability ? Math.floor(255-(255*probability)) : 0;
+  var greenValue = probability ? Math.floor(255*probability) : 0;
   for (let i = 0; i < content.length; i++) {
-      data[i] = 
-        ( content[i] << 24 ) | // alpha
-        ( 0   << 16 ) | // blue 
-        ( 0   << 8  ) | // green
-        0               // red
+    data[i] =
+      (content[i] << 24) | // alpha
+      (0 << 16)          | // blue 
+      (greenValue << 8)  | // green
+      redValue               // red
   }
   imageData.data.set(buf8);
-  console.info(imageData);
-  ctx.putImageData(imageData,(counter*28),0);
-  counter++;
+  console.log(`Data: ${imageData.data.length}`);
+  imageData = scaleImageData(imageData, backgroundScale);
+  console.log(`Data: ${imageData.data.length}`);
+  ctx.strokeText(guess.toString(), (counterHorizontal * 28 * backgroundScale), (counterVertical * 28 * backgroundScale), 20)
+  ctx.putImageData(imageData, (counterHorizontal * 28 * backgroundScale), (counterVertical * 28 * backgroundScale));
+  counterHorizontal++;
+  if(counterHorizontal % maxHorizontal == 0)
+  {
+    counterVertical++;
+    counterHorizontal = 0;
+  }
+
 }
 
 
@@ -48,7 +64,7 @@ function findxy(res: string, e: MouseEvent, ctx: CanvasRenderingContext2D) {
     if (dot_flag) {
       ctx.beginPath();
       ctx.fillStyle = "#000000";
-      ctx.fillRect(currX, currY, 8, 8);
+      ctx.fillRect(currX, currY, 10, 10);
       ctx.closePath();
       dot_flag = false;
     }
@@ -71,7 +87,7 @@ function draw(ctx: CanvasRenderingContext2D) {
   ctx.moveTo(prevX, prevY);
   ctx.lineTo(currX, currY);
   ctx.strokeStyle = "black";
-  ctx.lineWidth = 8;
+  ctx.lineWidth = 10;
   ctx.stroke();
   ctx.closePath();
 }
@@ -117,7 +133,7 @@ async function setUpDrawning(): Promise<any> {
   );
   canvas.addEventListener(
     "mouseout",
-    function(e) {
+    function (e) {
       console.log("out");
       findxy("out", e, ctx);
     },
@@ -125,10 +141,31 @@ async function setUpDrawning(): Promise<any> {
   );
 }
 
+function scaleImageData(imageData: ImageData, scale: number) {
+  var newCanvas = document.createElement("canvas");
+  newCanvas.width = imageData.width;
+  newCanvas.height = imageData.height;
+
+  var ctxn = <CanvasRenderingContext2D>newCanvas.getContext("2d");
+  ctxn.putImageData(imageData, 0, 0);
+
+  // Second canvas, for scaling
+  var scaleCanvas = document.createElement("canvas");
+  scaleCanvas.width = imageData.width * scale;
+  scaleCanvas.height = imageData.height * scale;
+
+  var scaleCtx = <CanvasRenderingContext2D>scaleCanvas.getContext("2d");
+
+  scaleCtx.scale(scale, scale);
+  scaleCtx.drawImage(newCanvas, 0, 0);
+
+  var scaledImageData = scaleCtx.getImageData(0, 0, scaleCanvas.width, scaleCanvas.height);
+
+  return scaledImageData;
+}
+
 hub.on("receivePrediction", (digit: any, prediction: any) => {
   const displayDigit = <HTMLParagraphElement>document.getElementById("digit");
-  console.info(prediction);
-  console.info(digit);
   const digits = <HTMLUListElement>document.getElementById("digits");
   if (!digits) return;
   if (!displayDigit) return;
@@ -142,6 +179,10 @@ hub.on("receivePrediction", (digit: any, prediction: any) => {
   }
   digits.childNodes.item(0).childNodes[0];
   displayDigit.innerText = prediction.label;
+});
+
+hub.on("receiveBackground", (digits: any, prediction: any) => {
+  backgroundDrawning(digits, prediction.label, prediction.score[prediction.label]);
 });
 
 function reset(): any {
@@ -165,7 +206,6 @@ async function sendPrediction(data: ImageData) {
       result.push(v);
     }
   });
-  backgroundDrawning(result);
   hub.send("getPrediction", result);
 
   var destination = <HTMLCanvasElement>document.getElementById("destination");
