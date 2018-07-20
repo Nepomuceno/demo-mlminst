@@ -21,7 +21,7 @@ namespace api
         {
             var pipeline = new LearningPipeline();
 
-            string dataPath = "./mnist_train.csv";
+            string dataPath = "./train.csv";
 
             pipeline.Add(new TextLoader(dataPath).CreateFrom<MinstDigit>(separator: ',', useHeader: true));
 
